@@ -39,7 +39,7 @@
 
     <div class="card">
       <p class="muted" style="margin-top:0;margin-bottom:14px;">
-        Ingresa los valores (11 variables) y presiona <b>Calcular</b>. La API de FastAPI debe estar corriendo en <code>http://127.0.0.1:8000</code>.
+        Ingresa los valores (11 variables) y presiona <b>Calcular</b>. La API debe estar corriendo (esta app detecta automáticamente el origen).
       </p>
 
       <form id="frm">
@@ -107,7 +107,12 @@
   </div>
 
   <script>
-    const API_BASE = 'http://127.0.0.1:8000';
+    // Si abres el HTML con file:// o lo sirves con un servidor estático local,
+    // usa la API local; si no, usa el mismo origen (Vercel).
+    const API_BASE = (location.protocol === 'file:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')
+      ? 'http://127.0.0.1:8000'
+      : window.location.origin;
+
     const form = document.getElementById('frm');
     const out = document.getElementById('out');
     const btn = document.getElementById('btn');

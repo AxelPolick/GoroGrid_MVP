@@ -1,10 +1,19 @@
 # app.py (versión ligera para Vercel)
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import json
 import os
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # puedes restringirlo luego
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Carga de pesos
 HERE = os.path.dirname(os.path.abspath(__file__))
