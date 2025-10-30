@@ -1,0 +1,29 @@
+{
+  "features": [
+    "Temperatura_Interior",
+    "Temperatura_Exterior",
+    "Humedad",
+    "Nivel_Iluminacion",
+    "Ocupacion",
+    "Consumo_Energetico_HVAC",
+    "Consumo_Energetico_Iluminacion",
+    "Uso_Electrodomesticos",
+    "Presencia_Movimiento",
+    "Hora_Del_Dia",
+    "Dia_De_Semana"
+  ],
+  "coef": [
+    0.019046813355082095,
+    0.0015679127162813778,
+    -0.0009056563223356787,
+    0.010217086506699209,
+    0.0489322495374062,
+    1.0073756530734834,
+    0.8960521734016962,
+    0.9369156716673209,
+    -0.05003709753125135,
+    -0.0015503701600286315,
+    0.004244455978456264
+  ],
+  "intercept": -0.1705527917172418
+}
