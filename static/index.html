@@ -3,31 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GoroGrid – Predicción de Consumo</title>
+  <title>GoroGrid ⚡ Predicción Energética</title>
   <style>
-    :root { --bg:#0b0b10; --card:#171822; --text:#f2f2f7; --muted:#a0a3ad; --brand:#7c4dff; --ok:#16a34a; --err:#ef4444; }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; }
-    body { margin:0; background:linear-gradient(180deg, #0d0d13, #0b0b10); color:var(--text); }
-    .wrap { max-width:980px; margin:32px auto; padding:0 16px; }
-    header { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-    .logo { width:28px; height:28px; background:var(--brand); border-radius:8px; display:grid; place-items:center; color:#fff; font-weight:900; }
-    h1 { font-size:20px; margin:0; letter-spacing:.2px; }
+    :root {
+      --bg: #0b0b10; --card: #181a24; --text: #f2f2f7;
+      --muted: #a0a3ad; --brand: #7c4dff; --ok: #16a34a; --err: #ef4444;
+    }
+    * { box-sizing: border-box; font-family: Inter, system-ui, sans-serif; }
+    body { margin:0; background:linear-gradient(180deg,#0d0d13,#0b0b10); color:var(--text); }
+    .wrap { max-width:960px; margin:32px auto; padding:0 16px; }
+    header { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+    .logo { width:32px; height:32px; background:var(--brand); border-radius:8px; display:grid; place-items:center; color:#fff; font-weight:900; }
+    h1 { font-size:20px; margin:0; letter-spacing:.3px; }
     .card { background:var(--card); border:1px solid #232435; border-radius:16px; padding:16px; }
-    .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
-    label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
-    input, select { width:100%; padding:12px 12px; border-radius:10px; border:1px solid #2a2b3f; background:#10121a; color:var(--text); outline:none; }
-    input:focus { border-color:#3a3cff; box-shadow:0 0 0 3px rgba(58,60,255,.15); }
-    .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
-    button { padding:12px 16px; border:0; border-radius:12px; background:var(--brand); color:#fff; font-weight:700; cursor:pointer; }
-    button.secondary { background:#2a2b3f; color:#e5e7eb; }
-    .result { margin-top:16px; padding:14px; border-radius:12px; border:1px solid #2a2b3f; background:#10121a; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+    label { font-size:13px; color:var(--muted); margin-bottom:5px; display:block; }
+    input { width:100%; padding:10px; border-radius:8px; border:1px solid #2a2b3f; background:#10121a; color:var(--text); }
+    input:focus { border-color:var(--brand); outline:none; }
+    button { padding:12px 16px; border:none; border-radius:12px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#2a2b3f; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+    .result { margin-top:18px; border:1px solid #2a2b3f; border-radius:12px; padding:14px; }
     .result.ok { border-color:#284a36; background:#0f1a14; }
     .result.err { border-color:#4a2835; background:#1a0f12; }
     .muted { color:var(--muted); font-size:12px; }
-    .footer { margin-top:20px; color:var(--muted); font-size:12px; text-align:center; }
     .spin { width:16px; height:16px; border:2px solid #fff3; border-top-color:#fff; border-radius:50%; display:inline-block; animation:rot .9s linear infinite; vertical-align:-3px; margin-right:6px; }
-    @keyframes rot { to { transform:rotate(360deg) } }
+    @keyframes rot { to { transform:rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -38,64 +39,28 @@
     </header>
 
     <div class="card">
-      <p class="muted" style="margin-top:0;margin-bottom:14px;">
-        Ingresa los valores (11 variables) y presiona <b>Calcular</b>. La API debe estar corriendo (esta app detecta automáticamente el origen).
-      </p>
+      <p class="muted">Completa los valores de sensores (IoT) y presiona <b>Calcular</b>. La API debe estar activa.</p>
 
       <form id="frm">
         <div class="grid">
-          <div>
-            <label>Temperatura Interior (°C)</label>
-            <input type="number" step="0.01" name="Temperatura_Interior" required />
-          </div>
-          <div>
-            <label>Temperatura Exterior (°C)</label>
-            <input type="number" step="0.01" name="Temperatura_Exterior" required />
-          </div>
-          <div>
-            <label>Humedad (%)</label>
-            <input type="number" step="0.01" name="Humedad" required />
-          </div>
-          <div>
-            <label>Nivel de Iluminación (lux)</label>
-            <input type="number" step="0.01" name="Nivel_Iluminacion" required />
-          </div>
-          <div>
-            <label>Ocupación (personas)</label>
-            <input type="number" step="1" name="Ocupacion" required />
-          </div>
-          <div>
-            <label>Consumo Energético HVAC</label>
-            <input type="number" step="0.0001" name="Consumo_Energetico_HVAC" required />
-          </div>
-          <div>
-            <label>Consumo Energético Iluminación</label>
-            <input type="number" step="0.0001" name="Consumo_Energetico_Iluminacion" required />
-          </div>
-          <div>
-            <label>Uso Electrodomésticos</label>
-            <input type="number" step="0.0001" name="Uso_Electrodomesticos" required />
-          </div>
-          <div>
-            <label>Presencia / Movimiento</label>
-            <select name="Presencia_Movimiento" required>
-              <option value="0">0 · No</option>
-              <option value="1">1 · Sí</option>
-            </select>
-          </div>
-          <div>
-            <label>Hora del Día (0–23)</label>
-            <input type="number" min="0" max="23" step="1" name="Hora_Del_Dia" required />
-          </div>
-          <div>
-            <label>Día de la Semana (1–7)</label>
-            <input type="number" min="1" max="7" step="1" name="Dia_De_Semana" required />
-          </div>
+          <div><label>Fecha y hora</label><input type="datetime-local" name="Date" required></div>
+          <div><label>z1_S1(degC)</label><input type="number" step="0.01" name="z1_S1(degC)" required></div>
+          <div><label>z1_S1(RH%)</label><input type="number" step="0.01" name="z1_S1(RH%)" required></div>
+          <div><label>z1_S1(lux)</label><input type="number" step="0.01" name="z1_S1(lux)" required></div>
+          <div><label>z2_S1(degC)</label><input type="number" step="0.01" name="z2_S1(degC)" required></div>
+          <div><label>z2_S1(RH%)</label><input type="number" step="0.01" name="z2_S1(RH%)" required></div>
+          <div><label>z2_S1(lux)</label><input type="number" step="0.01" name="z2_S1(lux)" required></div>
+          <div><label>z4_S1(degC)</label><input type="number" step="0.01" name="z4_S1(degC)" required></div>
+          <div><label>z4_S1(RH%)</label><input type="number" step="0.01" name="z4_S1(RH%)" required></div>
+          <div><label>z4_S1(lux)</label><input type="number" step="0.01" name="z4_S1(lux)" required></div>
+          <div><label>z5_S1(degC)</label><input type="number" step="0.01" name="z5_S1(degC)" required></div>
+          <div><label>z5_S1(RH%)</label><input type="number" step="0.01" name="z5_S1(RH%)" required></div>
+          <div><label>z5_S1(lux)</label><input type="number" step="0.01" name="z5_S1(lux)" required></div>
         </div>
 
         <div class="row">
           <button id="btn" type="submit">Calcular</button>
-          <button type="button" class="secondary" id="demo">Cargar ejemplo</button>
+          <button type="button" class="secondary" id="demo">Ejemplo</button>
           <span class="muted" id="status"></span>
         </div>
       </form>
@@ -103,120 +68,64 @@
       <div id="out" class="result" style="display:none;"></div>
     </div>
 
-    <div class="footer">© GoroGrid — MVP educativo</div>
+    <div class="footer muted" style="text-align:center;margin-top:20px;">© GoroGrid — MVP</div>
   </div>
 
   <script>
-    // Si abres el HTML con file:// o lo sirves con un servidor estático local,
-    // usa la API local; si no, usa el mismo origen (Vercel).
-    const API_BASE = (location.protocol === 'file:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')
+    const API_BASE = (location.hostname === '127.0.0.1' || location.hostname === 'localhost')
       ? 'http://127.0.0.1:8000'
       : window.location.origin;
 
     const form = document.getElementById('frm');
     const out = document.getElementById('out');
     const btn = document.getElementById('btn');
-    const statusEl = document.getElementById('status');
     const demoBtn = document.getElementById('demo');
+    const statusEl = document.getElementById('status');
 
-    // Rellena con ejemplo (los que ya probaste en Swagger)
     demoBtn.addEventListener('click', () => {
       const demo = {
-        Temperatura_Interior: 22.99,
-        Temperatura_Exterior: 32.63,
-        Humedad: 63.99,
-        Nivel_Iluminacion: 377.84,
-        Ocupacion: 29,
-        Consumo_Energetico_HVAC: 4.662,
-        Consumo_Energetico_Iluminacion: 2.097,
-        Uso_Electrodomesticos: 1.654,
-        Presencia_Movimiento: 0,
-        Hora_Del_Dia: 15,
-        Dia_De_Semana: 4
+        "Date": "2019-07-01T09:30",
+        "z1_S1(degC)": 28.6, "z1_S1(RH%)": 64.8, "z1_S1(lux)": 120.0,
+        "z2_S1(degC)": 28.7, "z2_S1(RH%)": 66.2, "z2_S1(lux)": 110.0,
+        "z4_S1(degC)": 29.0, "z4_S1(RH%)": 65.4, "z4_S1(lux)": 95.0,
+        "z5_S1(degC)": 28.9, "z5_S1(RH%)": 66.0, "z5_S1(lux)": 100.0
       };
-      for (const [k,v] of Object.entries(demo)) {
-        const el = form.elements[k];
-        if (el) el.value = v;
-      }
+      for (const [k,v] of Object.entries(demo)) if (form.elements[k]) form.elements[k].value = v;
     });
-
-    // Guarda/restaura últimos valores en localStorage
-    (function restore(){
-      try {
-        const cached = localStorage.getItem('gg_last');
-        if (!cached) return;
-        const data = JSON.parse(cached);
-        for (const [k,v] of Object.entries(data)) {
-          if (form.elements[k]) form.elements[k].value = v;
-        }
-      } catch {}
-    })();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      out.style.display = 'none';
-      out.className = 'result';
-      statusEl.textContent = '';
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spin"></span>Calculando…';
+      out.style.display = 'none'; out.className = 'result'; statusEl.textContent = '';
+      btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Calculando…';
 
-      // Construye payload en el ORDEN correcto
-      const payload = {};
-      const keys = [
-        "Temperatura_Interior",
-        "Temperatura_Exterior",
-        "Humedad",
-        "Nivel_Iluminacion",
-        "Ocupacion",
-        "Consumo_Energetico_HVAC",
-        "Consumo_Energetico_Iluminacion",
-        "Uso_Electrodomesticos",
-        "Presencia_Movimiento",
-        "Hora_Del_Dia",
-        "Dia_De_Semana"
-      ];
-      for (const k of keys) {
-        const v = form.elements[k].value;
-        payload[k] = (v === '' ? null : Number(v));
+      const features = {};
+      for (const el of form.elements) {
+        if (el.name) features[el.name] = el.type === 'number' ? parseFloat(el.value) : el.value;
       }
 
-      // cache
-      try { localStorage.setItem('gg_last', JSON.stringify(payload)); } catch {}
-
+      const payload = { features };
       try {
-        const res = await fetch(`${API_BASE}/predecir`, {
+        const res = await fetch(`${API_BASE}/predict`, {
           method: 'POST',
-          headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
+          headers: {'Content-Type':'application/json'},
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data?.detail || 'Error inesperado');
-        }
+        if (!res.ok) throw new Error(data.detail || 'Error en predicción');
 
         out.style.display = 'block';
         out.classList.add('ok');
         out.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div>
-              <div class="muted" style="margin-bottom:6px;">Consumo estimado</div>
-              <div style="font-size:28px;font-weight:800;">${Number(data.consumo_estimado).toFixed(4)}</div>
-            </div>
-            <div class="muted">
-              Unidad según entrenamiento del modelo (kWh / S/ según su dataset).
-            </div>
-          </div>
-        `;
+          <div><div class="muted" style="margin-bottom:6px;">Predicción de consumo</div>
+          <div style="font-size:28px;font-weight:800;">${data.prediction.toFixed(4)}</div></div>`;
         statusEl.textContent = 'Predicción completada ✔';
       } catch (err) {
         out.style.display = 'block';
         out.classList.add('err');
         out.innerHTML = `<b>Error:</b> ${err.message}`;
-        statusEl.textContent = 'Ocurrió un error';
+        statusEl.textContent = 'Error en la solicitud';
       } finally {
-        btn.disabled = false;
-        btn.textContent = 'Calcular';
+        btn.disabled = false; btn.textContent = 'Calcular';
       }
     });
   </script>

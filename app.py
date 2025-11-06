@@ -1,86 +1,233 @@
-# app.py — versión ligera (compatible con Vercel y local)
+# app.py — robusto para LinearRegression o Pipeline + validaciones claras + weights opcional
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
-import json
-import os
+from pydantic import BaseModel
+from typing import Dict, Any, List
+import os, json, joblib
+import pandas as pd
+import numpy as np
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-# 1) Crea la app primero
-app = FastAPI(title="GoroGrid — API ligera")
+MODEL_PATH = os.getenv("MODEL_PATH", "modelo_rlm.pkl")
+SCHEMA_PATH = os.getenv("SCHEMA_PATH", "modelo_rlm_schema.json")
+MEDIANS_PATH = os.getenv("MEDIANS_PATH", "feature_medians.json")  # opcional, para imputar
+FEATURE_LIST_ENV = os.getenv("FEATURE_LIST")  # fallback: "col1,col2,..."
 
-# 2) CORS (durante el MVP lo dejamos abierto; luego puedes restringir dominios)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],      # ej. ["https://tu-dominio.vercel.app"]
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="GoroGrid Floor7 API", version="1.3")
 
-# 3) Carga de pesos (coeficientes + orden de FEATURES)
-HERE = os.path.dirname(os.path.abspath(__file__))
-WEIGHTS_PATH = os.path.join(HERE, "weights.json")
-try:
-    with open(WEIGHTS_PATH, "r", encoding="utf-8") as f:
-        W = json.load(f)
-    FEATURES = W["features"]      # orden exacto usado al entrenar
-    COEF = W["coef"]
-    INTERCEPT = W["intercept"]
-except Exception as e:
-    raise RuntimeError(f"No pude leer weights.json: {e}")
+# =========================
+# Carga de recursos
+# =========================
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"No se encontró el modelo en {MODEL_PATH}")
+    return joblib.load(MODEL_PATH)
 
-# 4) Esquema de entrada (nombres EXACTOS del entrenamiento)
-class DatosEntrada(BaseModel):
-    Temperatura_Interior: float = Field(..., example=22.99)
-    Temperatura_Exterior: float = Field(..., example=32.63)
-    Humedad: float = Field(..., example=63.99)
-    Nivel_Iluminacion: float = Field(..., example=377.84)
-    Ocupacion: float = Field(..., example=29)
-    Consumo_Energetico_HVAC: float = Field(..., example=4.662)
-    Consumo_Energetico_Iluminacion: float = Field(..., example=2.097)
-    Uso_Electrodomesticos: float = Field(..., example=1.654)
-    Presencia_Movimiento: int = Field(..., ge=0, le=1, example=0)   # 0/1
-    Hora_Del_Dia: int = Field(..., ge=0, le=23, example=15)
-    Dia_De_Semana: int = Field(..., ge=0, le=6, example=4)          # dataset usaba 0..6
+def expected_columns_from_everywhere(model) -> List[str]:
+    # 1) schema JSON explícito
+    if os.path.exists(SCHEMA_PATH):
+        with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        cols = data.get("expected_feature_columns") or data.get("features")
+        if cols and isinstance(cols, list):
+            return list(cols)
 
-def dot(xs, ws):
-    s = 0.0
-    for x, w in zip(xs, ws):
-        s += x * w
-    return s
+    # 2) FEATURE_LIST (env)
+    if FEATURE_LIST_ENV:
+        cols = [c.strip() for c in FEATURE_LIST_ENV.split(",") if c.strip()]
+        if cols:
+            return cols
 
-# 5) Endpoints
+    # 3) feature_names_in_ (si tu modelo lo guarda)
+    if hasattr(model, "feature_names_in_"):
+        return list(model.feature_names_in_)
+
+    # 4) Si es Pipeline, intentar ColumnTransformer
+    if isinstance(model, Pipeline):
+        pre = None
+        for key in ["preprocesamiento", "preprocess", "preprocessing"]:
+            if key in model.named_steps:
+                pre = model.named_steps[key]
+                break
+        if pre is None:
+            for _, step in model.named_steps.items():
+                if isinstance(step, ColumnTransformer):
+                    pre = step
+                    break
+        if pre is not None:
+            cols: List[str] = []
+            for _, _, c in pre.transformers_:
+                if isinstance(c, (list, tuple)):
+                    cols += list(c)
+                else:
+                    cols.append(c)
+            if cols:
+                return cols
+
+    raise RuntimeError(
+        "No pude determinar las columnas de entrada. "
+        "Provee SCHEMA_PATH con expected_feature_columns, "
+        "o define FEATURE_LIST='col1,col2,...', "
+        "o re-entrena guardando feature_names_in_."
+    )
+
+MODEL = load_model()
+EXPECTED_COLS = expected_columns_from_everywhere(MODEL)
+
+MEDIANS = None
+if os.path.exists(MEDIANS_PATH):
+    with open(MEDIANS_PATH, "r", encoding="utf-8") as f:
+        MEDIANS = json.load(f)
+
+# =========================
+# Utilidades
+# =========================
+def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Si se proporciona Date, añade hour/dayofweek/month si faltan."""
+    if "Date" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["Date"]):
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    if "Date" in df.columns and pd.api.types.is_datetime64_any_dtype(df["Date"]):
+        if "hour" not in df.columns: df["hour"] = df["Date"].dt.hour
+        if "dayofweek" not in df.columns: df["dayofweek"] = df["Date"].dt.dayofweek
+        if "month" not in df.columns: df["month"] = df["Date"].dt.month
+    return df
+
+def ensure_order(df: pd.DataFrame, expected: List[str]) -> pd.DataFrame:
+    """Reindex para forzar orden y agregar columnas faltantes como NaN."""
+    return df.reindex(columns=expected)
+
+def try_impute_with_medians(X: pd.DataFrame) -> pd.DataFrame:
+    """Imputa NaN usando feature_medians.json si está disponible."""
+    if MEDIANS is None:
+        return X
+    for c in X.columns:
+        if X[c].isna().any() and c in MEDIANS and pd.api.types.is_numeric_dtype(X[c]):
+            X[c] = X[c].fillna(MEDIANS[c])
+    return X
+
+# =========================
+# Modelos de entrada
+# =========================
+class PredictPayload(BaseModel):
+    features: Dict[str, Any]
+
+# =========================
+# Endpoints
+# =========================
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "ok": True,
+        "model": os.path.basename(MODEL_PATH),
+        "n_expected": len(EXPECTED_COLS),
+        "expects_sample": EXPECTED_COLS[:8] + (["..."] if len(EXPECTED_COLS) > 8 else [])
+    }
 
-@app.post("/predecir")
-def predecir(d: DatosEntrada):
-    # Ordenar entradas exactamente como fueron entrenadas
-    try:
-        x = [getattr(d, name) for name in FEATURES]
-    except AttributeError as e:
-        raise HTTPException(status_code=422, detail=f"Falta campo: {e}")
+@app.get("/schema")
+def schema():
+    return {"expected_feature_columns": EXPECTED_COLS}
 
-    if len(x) != len(COEF):
+@app.post("/predict")
+def predict(payload: PredictPayload):
+    row = payload.features
+    df = pd.DataFrame([row])
+    df = add_time_features(df)
+
+    # 1) columnas faltantes respecto al schema
+    missing = [c for c in EXPECTED_COLS if c not in df.columns]
+    if missing:
         raise HTTPException(
             status_code=400,
-            detail="Dimensiones de entrada no coinciden con los pesos."
+            detail={"msg": "Faltan columnas en el payload.", "missing": missing}
         )
 
-    y = dot(x, COEF) + INTERCEPT
-    return {"consumo_estimado": y}   # <- nombre corregido
+    # 2) orden y NaN
+    X = ensure_order(df, EXPECTED_COLS)
+    if X.isna().any().any():
+        X = try_impute_with_medians(X)  # imputación opcional si hay archivo de medianas
+        if X.isna().any().any():
+            nan_cols = [c for c in X.columns if X[c].isna().any()]
+            raise HTTPException(
+                status_code=400,
+                detail={"msg": "Hay NaN en la fila de entrada.", "nan_columns": nan_cols}
+            )
 
-# 6) Servir UI estática si existe /static/index.html
-static_dir = os.path.join(HERE, "static")
-if os.path.isdir(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    # 3) predecir
+    try:
+        yhat = float(MODEL.predict(X)[0])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error en predicción: {e}")
+    return {"prediction": yhat}
 
-@app.get("/")
-def index():
-    index_html = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_html):
-        return FileResponse(index_html)
-    return {"msg": "API GoroGrid. Usa /docs para probar."}
+# ------------ Opcional: /weights y /export-weights ------------
+def _find_final_estimator(model):
+    if isinstance(model, Pipeline):
+        return list(model.named_steps.values())[-1]
+    return model
+
+def _find_scaler_params(model, expected_cols):
+    """Busca StandardScaler y devuelve (mean_, scale_) si mapea 1:1 con expected_cols."""
+    scaler = None
+    if isinstance(model, Pipeline):
+        for _, step in model.named_steps.items():
+            if isinstance(step, StandardScaler):
+                scaler = step
+                break
+        if scaler is None:
+            for _, step in model.named_steps.items():
+                if isinstance(step, ColumnTransformer):
+                    ct: ColumnTransformer = step
+                    for _, trans, cols in ct.transformers_:
+                        if isinstance(trans, Pipeline):
+                            for _, inner in trans.steps:
+                                if isinstance(inner, StandardScaler):
+                                    scaler = inner; break
+                        elif isinstance(trans, StandardScaler):
+                            scaler = trans
+                        if scaler is not None: break
+                if scaler is not None: break
+    if scaler is None: return None, None
+    mean_, scale_ = getattr(scaler, "mean_", None), getattr(scaler, "scale_", None)
+    if mean_ is None or scale_ is None: return None, None
+    if len(mean_) != len(expected_cols) or len(scale_) != len(expected_cols): return None, None
+    return np.array(mean_, float), np.array(scale_, float)
+
+@app.get("/export-weights")
+def export_weights():
+    """Genera weights.json (desescalado si hay StandardScaler) y weights_scaled.json."""
+    est = _find_final_estimator(MODEL)
+    if not hasattr(est, "coef_") or not hasattr(est, "intercept_"):
+        raise HTTPException(status_code=400, detail="El estimador no expone coef_ / intercept_.")
+    coef = np.ravel(est.coef_).astype(float)
+    intercept = float(est.intercept_)
+
+    # scaled
+    scaled_payload = {"features": EXPECTED_COLS, "coef": coef.tolist(), "intercept": intercept}
+    with open("weights_scaled.json", "w", encoding="utf-8") as f:
+        json.dump(scaled_payload, f, ensure_ascii=False, indent=2)
+
+    # try unscale
+    mean_, scale_ = _find_scaler_params(MODEL, EXPECTED_COLS)
+    if mean_ is not None and scale_ is not None:
+        unscaled_coef = coef / scale_
+        unscaled_intercept = float(intercept - np.sum(coef * (mean_ / scale_)))
+        payload = {"features": EXPECTED_COLS, "coef": unscaled_coef.tolist(), "intercept": unscaled_intercept}
+    else:
+        payload = scaled_payload
+
+    with open("weights.json", "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    return {"saved": ["weights.json", "weights_scaled.json"], "n_features": len(EXPECTED_COLS)}
+
+@app.get("/weights")
+def get_weights(scaled: bool = False):
+    path = "weights_scaled.json" if scaled else "weights.json"
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"No existe {path}. Llama primero a /export-weights.")
+    return json.load(open(path, "r", encoding="utf-8"))
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
