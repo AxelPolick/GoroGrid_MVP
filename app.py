@@ -8,6 +8,8 @@ import numpy as np
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 MODEL_PATH = os.getenv("MODEL_PATH", "modelo_rlm.pkl")
 SCHEMA_PATH = os.getenv("SCHEMA_PATH", "modelo_rlm_schema.json")
@@ -228,6 +230,20 @@ def get_weights(scaled: bool = False):
         raise HTTPException(status_code=404, detail=f"No existe {path}. Llama primero a /export-weights.")
     return json.load(open(path, "r", encoding="utf-8"))
 
-from fastapi.staticfiles import StaticFiles
+# =========================
+# Página raíz (para Vercel)
+# =========================
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return """
+    <html>
+      <head><title>GoroGrid API</title></head>
+      <body style='font-family: Arial; text-align:center; padding-top:50px;'>
+        <h1>⚡ GoroGrid API en Vercel</h1>
+        <p>La API está activa y lista para recibir solicitudes.</p>
+        <p>👉 <a href="/docs">Abrir documentación interactiva</a></p>
+      </body>
+    </html>
+    """
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# =============
