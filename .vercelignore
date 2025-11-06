@@ -1,6 +1,6 @@
-app.py
-export_weights.py
-modelo_rlm.pkl
-modelo_rlm_schema.json
-requirements.txt
-weights_scaled.json
+__pycache__/
+venv/
+.env
+*.ipynb
+*.csv
+*.pkl
