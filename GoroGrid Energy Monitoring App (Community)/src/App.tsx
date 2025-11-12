@@ -102,12 +102,12 @@ export default function App() {
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
-                className="bg-[#4CAF50] p-2 rounded-xl"
+                className="bg-[#7C4DFF] p-2 rounded-xl"
               >
                 <Zap className="w-6 h-6 text-white" />
               </motion.div>
               <div>
-                <h2 className="mb-0 text-[#4CAF50]">GoroGrid</h2>
+                <h2 className="mb-0 text-[#7C4DFF]">GoroGrid</h2>
                 <p className="text-muted-foreground hidden md:block">
                   Energía Inteligente
                 </p>
@@ -126,8 +126,8 @@ export default function App() {
                     onClick={() => setCurrentScreen(item.id)}
                     className={
                       isActive
-                        ? "bg-[#4CAF50] hover:bg-[#45a049]"
-                        : "hover:bg-[#4CAF50]/10"
+                        ? "bg-[#7C4DFF] hover:bg-[#6A3DE8]"
+                        : "hover:bg-[#7C4DFF]/10"
                     }
                   >
                     <Icon className="w-4 h-4 mr-2" />
@@ -139,16 +139,16 @@ export default function App() {
 
             {/* User Info, Dark Mode Toggle & Mobile Menu */}
             <div className="flex items-center gap-2">
-              <div className="hidden lg:flex items-center gap-2 mr-2 px-3 py-1 rounded-lg bg-[#4CAF50]/10">
-                <User className="w-4 h-4 text-[#4CAF50]" />
-                <span className="text-[#4CAF50]">{userData.name}</span>
+              <div className="hidden lg:flex items-center gap-2 mr-2 px-3 py-1 rounded-lg bg-[#7C4DFF]/10">
+                <User className="w-4 h-4 text-[#7C4DFF]" />
+                <span className="text-[#7C4DFF]">{userData.name}</span>
               </div>
 
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className="hover:bg-[#4CAF50]/10"
+                className="hover:bg-[#7C4DFF]/10"
               >
                 {isDarkMode ? (
                   <Sun className="w-5 h-5" />
@@ -160,7 +160,7 @@ export default function App() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden hover:bg-[#4CAF50]/10"
+                className="md:hidden hover:bg-[#7C4DFF]/10"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
@@ -197,8 +197,8 @@ export default function App() {
                     }}
                     className={`w-full justify-start ${
                       isActive
-                        ? "bg-[#4CAF50] hover:bg-[#45a049]"
-                        : "hover:bg-[#4CAF50]/10"
+                        ? "bg-[#7C4DFF] hover:bg-[#6A3DE8]"
+                        : "hover:bg-[#7C4DFF]/10"
                     }`}
                   >
                     <Icon className="w-4 h-4 mr-2" />
@@ -240,7 +240,7 @@ export default function App() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="bg-[#4CAF50] p-2 rounded-lg">
+              <div className="bg-[#7C4DFF] p-2 rounded-lg">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -251,16 +251,16 @@ export default function App() {
               </div>
             </div>
             <div className="flex flex-wrap gap-4 text-muted-foreground">
-              <button className="hover:text-[#4CAF50] transition-colors">
+              <button className="hover:text-[#7C4DFF] transition-colors">
                 Ayuda
               </button>
-              <button className="hover:text-[#4CAF50] transition-colors">
+              <button className="hover:text-[#7C4DFF] transition-colors">
                 Privacidad
               </button>
-              <button className="hover:text-[#4CAF50] transition-colors">
+              <button className="hover:text-[#7C4DFF] transition-colors">
                 Términos
               </button>
-              <button className="hover:text-[#4CAF50] transition-colors">
+              <button className="hover:text-[#7C4DFF] transition-colors">
                 Soporte
               </button>
             </div>

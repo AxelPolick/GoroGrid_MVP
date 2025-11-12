@@ -1,4 +1,4 @@
-# app.py — versión estable para ejecución local (sin cambios en predict)
+# app.py — versión con CORS habilitado y estáticos en /static
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List
@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware  # <-- NUEVO
 
 MODEL_PATH = os.getenv("MODEL_PATH", "modelo_rlm.pkl")
 SCHEMA_PATH = os.getenv("SCHEMA_PATH", "modelo_rlm_schema.json")
@@ -17,6 +18,20 @@ MEDIANS_PATH = os.getenv("MEDIANS_PATH", "feature_medians.json")
 FEATURE_LIST_ENV = os.getenv("FEATURE_LIST")
 
 app = FastAPI(title="GoroGrid Floor7 API", version="1.3")
+
+# ===== CORS (para conectar desde http://localhost:3000) =====
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost",
+        "http://127.0.0.1",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # =========================
 # Carga de recursos
@@ -163,4 +178,5 @@ def root():
     </body></html>
     """
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# Nota: montamos los estáticos en /static para no interferir con /predict o /docs
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")

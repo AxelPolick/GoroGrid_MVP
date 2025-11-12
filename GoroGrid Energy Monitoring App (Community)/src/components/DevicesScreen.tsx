@@ -138,8 +138,8 @@ export function DevicesScreen() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
-        <div className="p-4 rounded-xl bg-[#4CAF50]/10 border border-[#4CAF50]">
-          <div className="text-[2rem] leading-none mb-1 text-[#4CAF50]">
+        <div className="p-4 rounded-xl bg-[#7C4DFF]/10 border border-[#7C4DFF]">
+          <div className="text-[2rem] leading-none mb-1 text-[#7C4DFF]">
             {activeDevices}
           </div>
           <p className="text-muted-foreground">Dispositivos activos</p>
@@ -173,7 +173,7 @@ export function DevicesScreen() {
           variant={filter === "all" ? "default" : "outline"}
           onClick={() => setFilter("all")}
           className={
-            filter === "all" ? "bg-[#4CAF50] hover:bg-[#45a049]" : ""
+            filter === "all" ? "bg-[#7C4DFF] hover:bg-[#6A3DE8]" : ""
           }
         >
           Todos
@@ -182,11 +182,11 @@ export function DevicesScreen() {
           variant={filter === "active" ? "default" : "outline"}
           onClick={() => setFilter("active")}
           className={
-            filter === "active" ? "bg-[#4CAF50] hover:bg-[#45a049]" : ""
+            filter === "active" ? "bg-[#7C4DFF] hover:bg-[#6A3DE8]" : ""
           }
         >
           Activos
-          <Badge className="ml-2 bg-white text-[#4CAF50]">
+          <Badge className="ml-2 bg-white text-[#7C4DFF]">
             {activeDevices}
           </Badge>
         </Button>
@@ -194,11 +194,11 @@ export function DevicesScreen() {
           variant={filter === "inactive" ? "default" : "outline"}
           onClick={() => setFilter("inactive")}
           className={
-            filter === "inactive" ? "bg-[#4CAF50] hover:bg-[#45a049]" : ""
+            filter === "inactive" ? "bg-[#7C4DFF] hover:bg-[#6A3DE8]" : ""
           }
         >
           Inactivos
-          <Badge className="ml-2 bg-white text-[#4CAF50]">
+          <Badge className="ml-2 bg-white text-[#7C4DFF]">
             {devices.length - activeDevices}
           </Badge>
         </Button>
@@ -253,7 +253,7 @@ export function DevicesScreen() {
         >
           Encender todos
         </Button>
-        <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50]">
+        <Button variant="outline" className="border-[#7C4DFF] text-[#7C4DFF]">
           Modo Eco activado ✓
         </Button>
       </motion.div>

@@ -3,32 +3,28 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card } from "./ui/card";
-import { Separator } from "./ui/separator";
 import { Alert, AlertDescription } from "./ui/alert";
-import { Zap, Mail, Fingerprint, Chrome, AlertCircle } from "lucide-react";
+import { Zap, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form@7.55.0";
 import { toast } from "sonner@2.0.3";
 
 interface LoginScreenProps {
   onLogin: (userData: { name: string; email: string }) => void;
 }
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface RegisterFormData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string>("");
+  
+  // Login form
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
+  // Register form
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
 
   // Crear usuarios demo si no existen
   useEffect(() => {
@@ -54,35 +50,22 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   }, []);
 
-  const {
-    register: loginRegister,
-    handleSubmit: handleLoginSubmit,
-    formState: { errors: loginErrors },
-    reset: resetLogin,
-  } = useForm<LoginFormData>({
-    mode: "onSubmit",
-  });
-
-  const {
-    register: registerRegister,
-    handleSubmit: handleRegisterSubmit,
-    formState: { errors: registerErrors },
-    watch: watchRegister,
-    reset: resetRegister,
-  } = useForm<RegisterFormData>({
-    mode: "onSubmit",
-  });
-
   // Manejo del login
-  const onSubmitLogin = (data: LoginFormData) => {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
+    
+    if (!loginEmail || !loginPassword) {
+      setError("Por favor completa todos los campos");
+      return;
+    }
     
     // Obtener usuarios del localStorage
     const users = JSON.parse(localStorage.getItem("gorogrid_users") || "[]");
     
     // Buscar usuario
     const user = users.find(
-      (u: any) => u.email === data.email && u.password === data.password
+      (u: any) => u.email === loginEmail && u.password === loginPassword
     );
 
     if (user) {
@@ -90,19 +73,35 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       localStorage.setItem("gorogrid_current_user", JSON.stringify(user));
       onLogin({ name: user.name, email: user.email });
     } else {
-      setError("Email o contraseña incorrectos");
+      setError("Usuario o contraseña incorrectos");
     }
   };
 
   // Manejo del registro
-  const onSubmitRegister = (data: RegisterFormData) => {
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
+
+    if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
+      setError("Por favor completa todos los campos");
+      return;
+    }
+
+    if (registerPassword !== registerConfirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    if (registerPassword.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
 
     // Obtener usuarios del localStorage
     const users = JSON.parse(localStorage.getItem("gorogrid_users") || "[]");
 
     // Verificar si el email ya existe
-    const existingUser = users.find((u: any) => u.email === data.email);
+    const existingUser = users.find((u: any) => u.email === registerEmail);
 
     if (existingUser) {
       setError("Este correo ya está registrado");
@@ -115,9 +114,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     // Crear nuevo usuario
     const newUser = {
       id: Date.now().toString(),
-      name: data.name,
-      email: data.email,
-      password: data.password,
+      name: registerName,
+      email: registerEmail,
+      password: registerPassword,
       createdAt: new Date().toISOString(),
     };
 
@@ -127,26 +126,26 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     localStorage.setItem("gorogrid_current_user", JSON.stringify(newUser));
 
     toast.success("¡Cuenta creada exitosamente!", {
-      description: `Bienvenido a GoroGrid, ${data.name}`,
+      description: `Bienvenido a GoroGrid, ${registerName}`,
     });
 
     // Login automático
     onLogin({ name: newUser.name, email: newUser.email });
   };
 
-  // Login rápido con biometría o social (simula login con usuario demo)
-  const handleQuickLogin = () => {
-    const demoUser = {
-      id: "demo",
-      name: "Miguel Rodríguez",
-      email: "miguel.rodriguez@gorogrid.com",
-    };
-    localStorage.setItem("gorogrid_current_user", JSON.stringify(demoUser));
-    onLogin(demoUser);
+  const switchMode = (newMode: "login" | "register") => {
+    setMode(newMode);
+    setError("");
+    setLoginEmail("");
+    setLoginPassword("");
+    setRegisterName("");
+    setRegisterEmail("");
+    setRegisterPassword("");
+    setRegisterConfirmPassword("");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#4CAF50]/10 via-background to-[#4CAF50]/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#7C4DFF]/10 via-background to-[#7C4DFF]/5 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -161,7 +160,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="flex justify-center mb-6"
           >
-            <div className="bg-[#4CAF50] p-4 rounded-2xl">
+            <div className="bg-[#7C4DFF] p-4 rounded-2xl">
               <Zap className="w-12 h-12 text-white" />
             </div>
           </motion.div>
@@ -172,7 +171,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             transition={{ delay: 0.4 }}
             className="text-center mb-8"
           >
-            <h1 className="mb-2 text-[#4CAF50]">GoroGrid</h1>
+            <h1 className="mb-2 text-[#7C4DFF]">GoroGrid</h1>
             <p className="text-muted-foreground">
               {mode === "login"
                 ? "Optimiza tu consumo energético de forma inteligente"
@@ -197,57 +196,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             )}
           </AnimatePresence>
 
-          {/* Autenticación Biométrica y Social */}
-          {mode === "login" && (
-            <>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Button
-                  onClick={handleQuickLogin}
-                  variant="outline"
-                  className="w-full mb-4 h-12 border-[#4CAF50] hover:bg-[#4CAF50]/10"
-                >
-                  <Fingerprint className="w-5 h-5 mr-2 text-[#4CAF50]" />
-                  Iniciar con biometría
-                </Button>
-              </motion.div>
-
-              <div className="flex items-center gap-4 my-6">
-                <Separator className="flex-1" />
-                <span className="text-muted-foreground">o continúa con</span>
-                <Separator className="flex-1" />
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                className="space-y-3 mb-6"
-              >
-                <Button
-                  onClick={handleQuickLogin}
-                  variant="outline"
-                  className="w-full h-12"
-                >
-                  <Chrome className="w-5 h-5 mr-2" />
-                  Google
-                </Button>
-                <Button
-                  onClick={handleQuickLogin}
-                  variant="outline"
-                  className="w-full h-12"
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Email
-                </Button>
-              </motion.div>
-            </>
-          )}
-
-          {/* Formulario de Login */}
+          {/* Formularios */}
           <AnimatePresence mode="wait">
             {mode === "login" ? (
               <motion.form
@@ -256,29 +205,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
-                onSubmit={handleLoginSubmit(onSubmitLogin)}
+                onSubmit={handleLogin}
                 className="space-y-4"
               >
                 <div>
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email">Usuario</Label>
                   <Input
                     id="login-email"
                     type="email"
                     placeholder="tu@email.com"
-                    className={`h-12 mt-1 ${loginErrors.email ? "border-destructive" : ""}`}
-                    {...loginRegister("email", {
-                      required: "El email es requerido",
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Email inválido",
-                      },
-                    })}
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {loginErrors.email && (
-                    <p className="text-destructive mt-1">
-                      {loginErrors.email.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -287,25 +226,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     id="login-password"
                     type="password"
                     placeholder="••••••••"
-                    className={`h-12 mt-1 ${loginErrors.password ? "border-destructive" : ""}`}
-                    {...loginRegister("password", {
-                      required: "La contraseña es requerida",
-                      minLength: {
-                        value: 6,
-                        message: "Mínimo 6 caracteres",
-                      },
-                    })}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {loginErrors.password && (
-                    <p className="text-destructive mt-1">
-                      {loginErrors.password.message}
-                    </p>
-                  )}
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-[#4CAF50] hover:bg-[#45a049]"
+                  className="w-full h-12 bg-[#7C4DFF] hover:bg-[#6A3DE8]"
                 >
                   Iniciar sesión
                 </Button>
@@ -317,7 +246,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                onSubmit={handleRegisterSubmit(onSubmitRegister)}
+                onSubmit={handleRegister}
                 className="space-y-4"
               >
                 <div>
@@ -326,20 +255,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     id="register-name"
                     type="text"
                     placeholder="Juan Pérez"
-                    className={`h-12 mt-1 ${registerErrors.name ? "border-destructive" : ""}`}
-                    {...registerRegister("name", {
-                      required: "El nombre es requerido",
-                      minLength: {
-                        value: 3,
-                        message: "Mínimo 3 caracteres",
-                      },
-                    })}
+                    value={registerName}
+                    onChange={(e) => setRegisterName(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {registerErrors.name && (
-                    <p className="text-destructive mt-1">
-                      {registerErrors.name.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -348,20 +267,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     id="register-email"
                     type="email"
                     placeholder="tu@email.com"
-                    className={`h-12 mt-1 ${registerErrors.email ? "border-destructive" : ""}`}
-                    {...registerRegister("email", {
-                      required: "El email es requerido",
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Email inválido",
-                      },
-                    })}
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {registerErrors.email && (
-                    <p className="text-destructive mt-1">
-                      {registerErrors.email.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -370,20 +279,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     id="register-password"
                     type="password"
                     placeholder="••••••••"
-                    className={`h-12 mt-1 ${registerErrors.password ? "border-destructive" : ""}`}
-                    {...registerRegister("password", {
-                      required: "La contraseña es requerida",
-                      minLength: {
-                        value: 6,
-                        message: "Mínimo 6 caracteres",
-                      },
-                    })}
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {registerErrors.password && (
-                    <p className="text-destructive mt-1">
-                      {registerErrors.password.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -394,23 +293,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     id="register-confirm-password"
                     type="password"
                     placeholder="••••••••"
-                    className={`h-12 mt-1 ${registerErrors.confirmPassword ? "border-destructive" : ""}`}
-                    {...registerRegister("confirmPassword", {
-                      required: "Confirma tu contraseña",
-                      validate: (value) =>
-                        value === watchRegister("password") || "Las contraseñas no coinciden",
-                    })}
+                    value={registerConfirmPassword}
+                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                    className="h-12 mt-1"
                   />
-                  {registerErrors.confirmPassword && (
-                    <p className="text-destructive mt-1">
-                      {registerErrors.confirmPassword.message}
-                    </p>
-                  )}
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-[#4CAF50] hover:bg-[#45a049]"
+                  className="w-full h-12 bg-[#7C4DFF] hover:bg-[#6A3DE8]"
                 >
                   Crear cuenta
                 </Button>
@@ -429,12 +320,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <>
                 ¿No tienes cuenta?{" "}
                 <button
-                  onClick={() => {
-                    setMode("register");
-                    setError("");
-                    resetLogin();
-                  }}
-                  className="text-[#4CAF50] hover:underline"
+                  onClick={() => switchMode("register")}
+                  className="text-[#7C4DFF] hover:underline"
                   type="button"
                 >
                   Regístrate ahora
@@ -444,12 +331,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <>
                 ¿Ya tienes cuenta?{" "}
                 <button
-                  onClick={() => {
-                    setMode("login");
-                    setError("");
-                    resetRegister();
-                  }}
-                  className="text-[#4CAF50] hover:underline"
+                  onClick={() => switchMode("login")}
+                  className="text-[#7C4DFF] hover:underline"
                   type="button"
                 >
                   Inicia sesión
@@ -465,12 +348,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
-            className="mt-6 p-4 rounded-lg bg-[#4CAF50]/10 border border-[#4CAF50]/20"
+            className="mt-6 p-4 rounded-lg bg-[#7C4DFF]/10 border border-[#7C4DFF]/20"
           >
             <p className="text-center mb-2">🔑 Credenciales de prueba:</p>
             <div className="text-center text-muted-foreground space-y-1">
-              <p>Email: <span className="text-[#4CAF50]">miguel@demo.com</span></p>
-              <p>Contraseña: <span className="text-[#4CAF50]">123456</span></p>
+              <p>Email: <span className="text-[#7C4DFF]">miguel@demo.com</span></p>
+              <p>Contraseña: <span className="text-[#7C4DFF]">123456</span></p>
             </div>
           </motion.div>
         )}
@@ -481,7 +364,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           transition={{ delay: 1.2 }}
           className="text-center text-muted-foreground mt-6"
         >
-          🌿 Empieza a ahorrar energía hoy
+          ⚡ Empieza a ahorrar energía hoy
         </motion.p>
       </motion.div>
     </div>

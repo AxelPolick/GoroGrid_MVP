@@ -94,11 +94,11 @@ export function RoomScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="p-6 bg-gradient-to-br from-[#4CAF50]/10 to-[#66BB6A]/10 border-[#4CAF50]">
+        <Card className="p-6 bg-gradient-to-br from-[#7C4DFF]/10 to-[#9575CD]/10 border-[#7C4DFF]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Home className="w-5 h-5 text-[#4CAF50]" />
+                <Home className="w-5 h-5 text-[#7C4DFF]" />
                 <h3 className="mb-0">Resumen del hogar</h3>
               </div>
               <p className="text-muted-foreground">
@@ -110,7 +110,7 @@ export function RoomScreen() {
                 Temperatura promedio
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-[2rem] leading-none text-[#4CAF50]">
+                <span className="text-[2rem] leading-none text-[#7C4DFF]">
                   {avgTemp.toFixed(1)}°
                 </span>
                 <span className="text-muted-foreground">C</span>
@@ -119,7 +119,7 @@ export function RoomScreen() {
             <div>
               <p className="text-muted-foreground mb-2">Consumo total/día</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-[2rem] leading-none text-[#4CAF50]">
+                <span className="text-[2rem] leading-none text-[#7C4DFF]">
                   {totalConsumption.toFixed(1)}
                 </span>
                 <span className="text-muted-foreground">kWh</span>
@@ -139,15 +139,15 @@ export function RoomScreen() {
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-[#4CAF50]" />
+              <TrendingDown className="w-5 h-5 text-[#7C4DFF]" />
               <h4 className="mb-0">Objetivo de ahorro</h4>
             </div>
-            <Badge className="bg-[#4CAF50]">En progreso</Badge>
+            <Badge className="bg-[#7C4DFF]">En progreso</Badge>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Progreso mensual</span>
-              <span className="text-[#4CAF50]">67%</span>
+              <span className="text-[#7C4DFF]">67%</span>
             </div>
             <Progress value={67} className="h-2" />
             <p className="text-muted-foreground">
@@ -159,16 +159,16 @@ export function RoomScreen() {
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#66BB6A]" />
+              <Award className="w-5 h-5 text-[#9575CD]" />
               <h4 className="mb-0">Habitación destacada</h4>
             </div>
-            <Badge variant="outline" className="border-[#66BB6A] text-[#66BB6A]">
+            <Badge variant="outline" className="border-[#9575CD] text-[#9575CD]">
               ⭐ TOP
             </Badge>
           </div>
           <div className="space-y-2">
             <p>
-              <span className="text-[#66BB6A]">Oficina</span> ha reducido
+              <span className="text-[#9575CD]">Oficina</span> ha reducido
               su consumo un 32% este mes
             </p>
             <p className="text-muted-foreground">
@@ -221,13 +221,13 @@ export function RoomScreen() {
         </Button>
         <Button
           variant="outline"
-          className="border-[#4CAF50] text-[#4CAF50]"
+          className="border-[#7C4DFF] text-[#7C4DFF]"
         >
           Modo Noche (22°C)
         </Button>
         <Button
           variant="outline"
-          className="border-[#4CAF50] text-[#4CAF50]"
+          className="border-[#7C4DFF] text-[#7C4DFF]"
         >
           Modo Ahorro (26°C)
         </Button>
